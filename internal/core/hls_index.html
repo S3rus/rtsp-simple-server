@@ -20,7 +20,7 @@ html, body {
 
 <video id="video" muted controls autoplay playsinline></video>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.2.9"></script>
+<script src="./hls.js"></script>
 
 <script>
 
@@ -30,7 +30,18 @@ const create = () => {
 	// always prefer hls.js over native HLS.
 	// this is because some Android versions support native HLS
 	// but don't support fMP4s.
-	if (Hls.isSupported()) {
+	//IN thiscase we try the native HLS implementation first, because we want to make it work in a Internet free network
+	if (video.canPlayType('application/vnd.apple.mpegurl')) {
+		// since it's not possible to detect timeout errors in iOS,
+		// wait for the playlist to be available before starting the stream
+		fetch('stream.m3u8')
+			.then(() => {
+				video.src = 'index.m3u8';
+				video.play();
+			});
+	}
+	//The following code is the hls.js implementation of the code
+	else if (Hls.isSupported()) {
 		const hls = new Hls({
 			maxLiveSyncPlaybackRate: 1.5,
 		});
@@ -48,14 +59,6 @@ const create = () => {
 
 		video.play();
 
-	} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-		// since it's not possible to detect timeout errors in iOS,
-		// wait for the playlist to be available before starting the stream
-		fetch('stream.m3u8')
-			.then(() => {
-				video.src = 'index.m3u8';
-				video.play();
-			});
 	}
 };
 
